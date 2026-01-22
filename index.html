@@ -1,648 +1,1272 @@
 <!doctype html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>C25Tool • Bot Portal</title>
-  <meta name="description" content="Web Portal dành cho User & Admin - kết nối với Discord Bot API"/>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tuấn Ank Bot • VIP Control Panel</title>
+  <meta name="description" content="Bảng điều khiển VIP cho Tuấn Ank Bot – kết nối Web API, quản lý Admin & User, shortener, thông báo, và hệ thống bot." />
   <style>
-    .glass{background:rgba(255,255,255,.08);backdrop-filter: blur(12px);border:1px solid rgba(255,255,255,.12)}
-    .soft{box-shadow:0 20px 60px rgba(0,0,0,.35)}
-    .grad{background:radial-gradient(1200px 700px at 20% 10%, rgba(88,101,242,.35), transparent 55%),
-                 radial-gradient(900px 600px at 85% 25%, rgba(46,204,113,.28), transparent 55%),
-                 radial-gradient(900px 600px at 50% 100%, rgba(231,76,60,.24), transparent 55%),
-                 linear-gradient(180deg, #0b1020, #070a12);}
-    .chip{border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06)}
-    .btn{transition:transform .12s ease, filter .12s ease;}
-    .btn:active{transform:scale(.98);}
-    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+    :root{
+      --bg0:#070914;
+      --bg1:#0b1026;
+      --card:rgba(255,255,255,.06);
+      --card2:rgba(255,255,255,.08);
+      --stroke:rgba(255,255,255,.10);
+      --text:#e8ecff;
+      --muted:rgba(232,236,255,.72);
+      --muted2:rgba(232,236,255,.55);
+      --good:#4cffb5;
+      --warn:#ffcc66;
+      --bad:#ff5c86;
+      --brand1:#7c4dff;
+      --brand2:#25f0d5;
+      --shadow: 0 12px 44px rgba(0,0,0,.45);
+      --radius:20px;
+      --radius2:26px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 12% 8%, rgba(124,77,255,.24), transparent 55%),
+        radial-gradient(900px 600px at 88% 18%, rgba(37,240,213,.20), transparent 55%),
+        radial-gradient(800px 500px at 55% 92%, rgba(255,92,134,.14), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x:hidden;
+    }
+
+    /* Soft noise overlay */
+    .noise{
+      pointer-events:none;
+      position:fixed; inset:0;
+      opacity:.10;
+      background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="220" height="220"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="3" stitchTiles="stitch"/></filter><rect width="220" height="220" filter="url(%23n)" opacity=".55"/></svg>');
+      mix-blend-mode: overlay;
+      z-index:1;
+    }
+
+    .wrap{
+      position:relative;
+      z-index:2;
+      min-height:100%;
+      display:grid;
+      grid-template-columns: 300px 1fr;
+      gap:18px;
+      padding:18px;
+      max-width: 1320px;
+      margin:0 auto;
+    }
+    @media (max-width: 980px){
+      .wrap{grid-template-columns:1fr; padding:14px}
+    }
+
+    .sidebar{
+      position:sticky;
+      top:16px;
+      align-self:start;
+      border:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius2);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .sideTop{
+      padding:18px 18px 12px 18px;
+      border-bottom:1px solid var(--stroke);
+    }
+    .brandRow{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px;
+    }
+    .logo{
+      width:42px; height:42px; border-radius:14px;
+      background: conic-gradient(from 220deg, var(--brand1), var(--brand2), var(--bad), var(--brand1));
+      box-shadow: 0 10px 24px rgba(124,77,255,.28);
+      position:relative;
+    }
+    .logo:after{
+      content:"";
+      position:absolute; inset:8px;
+      background: rgba(0,0,0,.25);
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.18);
+      backdrop-filter: blur(8px);
+    }
+    .titleBox{display:flex; flex-direction:column; line-height:1.1}
+    .titleBox .t1{font-weight:800; letter-spacing:.2px}
+    .titleBox .t2{font-size:12px; color:var(--muted2)}
+    .badgeVip{
+      font-size:11px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(124,77,255,.18);
+      color: rgba(232,236,255,.92);
+      white-space:nowrap;
+    }
+
+    .sideStats{
+      margin-top:12px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+    .mini{
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      border-radius:16px;
+      padding:10px 12px;
+    }
+    .mini .k{font-size:11px;color:var(--muted2)}
+    .mini .v{font-weight:800; margin-top:4px}
+
+    .nav{
+      padding:10px;
+      display:flex; flex-direction:column;
+      gap:8px;
+    }
+    .navBtn{
+      cursor:pointer;
+      border:1px solid transparent;
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      padding:12px 12px;
+      border-radius:16px;
+      display:flex; align-items:center; gap:10px;
+      transition:.18s ease;
+    }
+    .navBtn:hover{ background: rgba(255,255,255,.07); transform: translateY(-1px); }
+    .navBtn.active{
+      border-color: rgba(124,77,255,.42);
+      background: linear-gradient(90deg, rgba(124,77,255,.26), rgba(37,240,213,.10));
+      box-shadow: 0 10px 26px rgba(124,77,255,.18);
+    }
+    .ico{
+      width:34px; height:34px; border-radius:14px;
+      display:grid; place-items:center;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.22);
+      font-size:16px;
+    }
+    .navBtn .text{display:flex; flex-direction:column}
+    .navBtn .text b{font-size:13px}
+    .navBtn .text span{font-size:11px;color:var(--muted2)}
+    .sideBottom{
+      padding:14px 18px 18px 18px;
+      border-top:1px solid var(--stroke);
+      color:var(--muted2);
+      font-size:12px;
+      line-height:1.35;
+    }
+    .linkLine{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+    .pillLink{
+      text-decoration:none; color:var(--text);
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.04);
+      padding:8px 10px;
+      border-radius:999px;
+      font-size:12px;
+      transition:.15s ease;
+    }
+    .pillLink:hover{transform: translateY(-1px); background: rgba(255,255,255,.07);}
+
+    .main{
+      border:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius2);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:16px 18px;
+      border-bottom:1px solid var(--stroke);
+      gap:12px;
+    }
+    .crumb{
+      display:flex; flex-direction:column;
+      gap:3px;
+    }
+    .crumb .h1{font-weight:900; font-size:16px}
+    .crumb .h2{font-size:12px;color:var(--muted2)}
+    .actions{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end}
+    .btn{
+      cursor:pointer;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:16px;
+      font-weight:700;
+      font-size:12px;
+      transition:.16s ease;
+      display:flex; align-items:center; gap:8px;
+    }
+    .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.08)}
+    .btn.primary{
+      border-color: rgba(124,77,255,.55);
+      background: linear-gradient(90deg, rgba(124,77,255,.34), rgba(37,240,213,.12));
+    }
+    .btn.danger{
+      border-color: rgba(255,92,134,.55);
+      background: rgba(255,92,134,.12);
+    }
+    .btn.good{
+      border-color: rgba(76,255,181,.50);
+      background: rgba(76,255,181,.10);
+    }
+
+    .content{
+      padding:18px;
+      display:grid;
+      gap:14px;
+    }
+    .grid2{display:grid; grid-template-columns: 1fr 1fr; gap:14px}
+    .grid3{display:grid; grid-template-columns: 1fr 1fr 1fr; gap:14px}
+    @media (max-width: 980px){
+      .grid2,.grid3{grid-template-columns:1fr}
+    }
+
+    .card{
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.04);
+      border-radius: var(--radius);
+      padding:14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.28);
+    }
+    .card h3{
+      margin:0;
+      font-size:13px;
+      letter-spacing:.2px;
+    }
+    .sub{font-size:12px;color:var(--muted2); margin-top:6px; line-height:1.35}
+    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .field{
+      width:100%;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.25);
+      color: var(--text);
+      padding:12px 12px;
+      border-radius:16px;
+      outline:none;
+      font-size:13px;
+    }
+    .field::placeholder{color: rgba(232,236,255,.45)}
+    .mono{font-family:var(--mono)}
+    .kpi{
+      display:flex; align-items:flex-start; justify-content:space-between;
+      gap:12px;
+    }
+    .kpi .big{
+      font-size:24px;
+      font-weight:900;
+      letter-spacing:.2px;
+      margin-top:2px;
+    }
+    .tag{
+      font-size:11px;
+      border:1px solid var(--stroke);
+      padding:6px 10px;
+      border-radius:999px;
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+    }
+
+    .table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0 10px;
+      font-size:13px;
+    }
+    .table th{
+      text-align:left;
+      color: var(--muted2);
+      font-size:11px;
+      font-weight:700;
+      padding:0 10px 6px 10px;
+    }
+    .table td{
+      padding:12px 10px;
+      background: rgba(255,255,255,.035);
+      border-top:1px solid rgba(255,255,255,.06);
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .table tr td:first-child{border-left:1px solid rgba(255,255,255,.06); border-top-left-radius:16px; border-bottom-left-radius:16px}
+    .table tr td:last-child{border-right:1px solid rgba(255,255,255,.06); border-top-right-radius:16px; border-bottom-right-radius:16px}
+    .muted{color:var(--muted2)}
+    .good{color:var(--good)}
+    .bad{color:var(--bad)}
+    .warn{color:var(--warn)}
+
+    .toast{
+      position:fixed;
+      right:16px; bottom:16px;
+      z-index:9999;
+      max-width:min(520px, calc(100vw - 32px));
+      border:1px solid var(--stroke);
+      background: rgba(10,14,33,.85);
+      backdrop-filter: blur(14px);
+      border-radius: 18px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.55);
+      padding:12px 14px;
+      display:none;
+    }
+    .toast.show{display:block; animation: pop .18s ease}
+    @keyframes pop{from{transform: translateY(8px); opacity:.0}to{transform: translateY(0); opacity:1}}
+    .toast b{display:block; font-size:12px}
+    .toast span{display:block; font-size:12px; color:var(--muted2); margin-top:3px; line-height:1.35}
+
+    .codeBox{
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.35);
+      border-radius:16px;
+      padding:12px;
+      font-family:var(--mono);
+      font-size:12px;
+      color: rgba(232,236,255,.88);
+      overflow:auto;
+    }
+    .sep{height:1px; background: rgba(255,255,255,.08); margin:10px 0}
+
+    .hide{display:none !important;}
+    .right{margin-left:auto;}
   </style>
 </head>
-<body class="grad min-h-screen text-white">
-  <div class="max-w-7xl mx-auto px-4 py-6">
-    <div class="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-11 h-11 rounded-2xl bg-indigo-500/20 grid place-items-center soft"><span class="text-2xl">⚡</span></div>
-        <div>
-          <div class="text-xl font-bold">C25Tool • Bot Portal</div>
-          <div class="text-white/60 text-sm">User Dashboard + Admin Panel • kết nối Discord Bot API</div>
-        </div>
-      </div>
-      <div class="flex gap-2 flex-wrap">
-        <button class="btn px-4 py-2 rounded-2xl chip hover:bg-white/10" onclick="go('home')">🏠 Trang chủ</button>
-        <button class="btn px-4 py-2 rounded-2xl chip hover:bg-white/10" onclick="go('commands')">📖 Lệnh</button>
-        <button class="btn px-4 py-2 rounded-2xl chip hover:bg-white/10" onclick="go('user')">👤 User</button>
-        <button class="btn px-4 py-2 rounded-2xl chip hover:bg-white/10" onclick="go('admin')">🛡️ Admin</button>
-        <button class="btn px-4 py-2 rounded-2xl chip hover:bg-white/10" onclick="go('shorteners')">🔗 Link Vượt</button>
-        <button class="btn px-4 py-2 rounded-2xl chip hover:bg-white/10" onclick="openSettings()">⚙️ API</button>
-      </div>
-    </div>
+<body>
+  <div class="noise"></div>
 
-    <div class="mt-6 glass rounded-3xl p-5 soft">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <div class="text-2xl font-extrabold">✨ Portal đẹp kiểu Mimi • Netlify</div>
-          <div class="text-white/70 mt-1">
-            ✅ User lấy token Discord: <span class="mono">/token</span> (bot DM) • Reset: <span class="mono">/token reset</span><br/>
-            ✅ Admin đăng nhập quản lý qua Web API của bot.
-          </div>
-        </div>
-        <div class="flex gap-2 flex-wrap">
-          <a class="btn px-4 py-2 rounded-2xl bg-indigo-500/80 hover:bg-indigo-500" href="#" onclick="go('user')">Bắt đầu User</a>
-          <a class="btn px-4 py-2 rounded-2xl bg-emerald-500/80 hover:bg-emerald-500" href="#" onclick="go('admin')">Bắt đầu Admin</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="grid lg:grid-cols-12 gap-6 mt-6">
-      <div class="lg:col-span-4">
-        <div class="glass rounded-3xl p-5 soft">
-          <div class="font-bold text-lg">📌 Trạng thái kết nối</div>
-          <div class="mt-3 space-y-2 text-sm">
-            <div class="flex items-center justify-between chip rounded-2xl px-3 py-2">
-              <span class="text-white/70">API Base</span>
-              <span class="mono" id="apiBaseTxt">—</span>
-            </div>
-            <div class="flex items-center justify-between chip rounded-2xl px-3 py-2">
-              <span class="text-white/70">API Health</span>
-              <span id="apiHealthTxt" class="text-white/60">chưa kiểm tra</span>
-            </div>
-            <div class="flex items-center justify-between chip rounded-2xl px-3 py-2">
-              <span class="text-white/70">User</span>
-              <span id="userStatusTxt" class="text-white/60">chưa đăng nhập</span>
-            </div>
-            <div class="flex items-center justify-between chip rounded-2xl px-3 py-2">
-              <span class="text-white/70">Admin</span>
-              <span id="adminStatusTxt" class="text-white/60">chưa đăng nhập</span>
+  <div class="wrap">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sideTop">
+        <div class="brandRow">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="logo"></div>
+            <div class="titleBox">
+              <div class="t1">Tuấn Ank Bot</div>
+              <div class="t2">VIP Control Panel • Netlify</div>
             </div>
           </div>
-          <div class="mt-4 flex gap-2 flex-wrap">
-            <button class="btn px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15" onclick="checkHealth()">🔌 Check API</button>
-            <button class="btn px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15" onclick="logoutAll()">🚪 Logout</button>
-          </div>
-          <div class="mt-5 border-t border-white/10 pt-5">
-            <div class="font-bold">⚠️ Lưu ý</div>
-            <ul class="text-white/70 text-sm mt-2 list-disc pl-5 space-y-1">
-              <li>Netlify chỉ host <b>front-end</b> → bot phải mở <b>Web API</b> (port 8080).</li>
-              <li>Token user là bí mật, không share.</li>
-              <li>Không nên hard-code mật khẩu admin trong web nếu dùng public.</li>
-            </ul>
-          </div>
+          <div class="badgeVip">VIP • ULTIMATE</div>
         </div>
 
-        <div class="glass rounded-3xl p-5 soft mt-6">
-          <div class="font-bold text-lg">📎 Link nhanh</div>
-          <div class="grid grid-cols-2 gap-2 mt-3 text-sm">
-            <a class="btn chip rounded-2xl px-3 py-2 hover:bg-white/10" target="_blank" href="https://facebook.com/anhyeuemnhamlun">Facebook</a>
-            <a class="btn chip rounded-2xl px-3 py-2 hover:bg-white/10" target="_blank" href="https://zalo.me/0763465951">Zalo</a>
-            <a class="btn chip rounded-2xl px-3 py-2 hover:bg-white/10" target="_blank" href="https://t.me/tuanank209">Telegram</a>
-            <a class="btn chip rounded-2xl px-3 py-2 hover:bg-white/10" target="_blank" href="https://discord.com/oauth2/authorize?client_id=1459868186361991373&permissions=8&integration_type=0&scope=bot">Add Bot</a>
+        <div class="sideStats">
+          <div class="mini">
+            <div class="k">API Health</div>
+            <div class="v" id="miniHealth">—</div>
+          </div>
+          <div class="mini">
+            <div class="k">Trạng thái</div>
+            <div class="v" id="miniConn">Chưa</div>
           </div>
         </div>
       </div>
 
-      <div class="lg:col-span-8">
-        <div id="page-home" class="page glass rounded-3xl p-6 soft">
-          <div class="text-2xl font-extrabold">🚀 Portal tổng</div>
-          <div class="text-white/70 mt-2">
-            Chọn tab <b>User</b> hoặc <b>Admin</b> để bắt đầu. Dùng nút <b>⚙️ API</b> để nhập API Base.
-          </div>
-          <div class="grid md:grid-cols-2 gap-4 mt-6">
-            <div class="glass rounded-3xl p-5">
-              <div class="font-bold text-lg">👤 User Dashboard</div>
-              <div class="text-white/70 text-sm mt-1">Login bằng token Discord DM.</div>
-              <button class="btn mt-4 px-4 py-2 rounded-2xl bg-indigo-500/80 hover:bg-indigo-500" onclick="go('user')">Vào User</button>
-            </div>
-            <div class="glass rounded-3xl p-5">
-              <div class="font-bold text-lg">🛡️ Admin Panel</div>
-              <div class="text-white/70 text-sm mt-1">Quản lý hệ thống bot qua API.</div>
-              <button class="btn mt-4 px-4 py-2 rounded-2xl bg-emerald-500/80 hover:bg-emerald-500" onclick="go('admin')">Vào Admin</button>
-            </div>
-          </div>
+      <div class="nav">
+        <button class="navBtn active" data-page="home">
+          <div class="ico">🏠</div>
+          <div class="text"><b>Trang chủ</b><span>Check API, hướng dẫn VIP</span></div>
+        </button>
+        <button class="navBtn" data-page="user">
+          <div class="ico">👤</div>
+          <div class="text"><b>User</b><span>Ví coin, level, token</span></div>
+        </button>
+        <button class="navBtn" data-page="admin">
+          <div class="ico">🛡️</div>
+          <div class="text"><b>Admin</b><span>Quản lý bot & hệ thống</span></div>
+        </button>
+        <button class="navBtn" data-page="shorteners">
+          <div class="ico">🔗</div>
+          <div class="text"><b>Link vượt</b><span>Thêm / xóa API rút gọn</span></div>
+        </button>
+        <button class="navBtn" data-page="announce">
+          <div class="ico">📣</div>
+          <div class="text"><b>Thông báo</b><span>Set kênh + gửi broadcast</span></div>
+        </button>
+        <button class="navBtn" data-page="cmd">
+          <div class="ico">📦</div>
+          <div class="text"><b>Lệnh trong bot</b><span>Danh mục & mô tả VIP</span></div>
+        </button>
+      </div>
+
+      <div class="sideBottom">
+        <b>💡 Tip VIP</b><br/>
+        Nếu Netlify báo <span class="bad">Không kết nối</span> → hãy đảm bảo bot-hosting đang mở đúng PORT (Allocations) và Web API chạy đúng port đó.
+        <div class="linkLine">
+          <a class="pillLink" href="https://facebook.com/anhyeuemnhamlun" target="_blank" rel="noreferrer">Facebook</a>
+          <a class="pillLink" href="https://zalo.me/0763465951" target="_blank" rel="noreferrer">Zalo</a>
+          <a class="pillLink" href="https://t.me/tuanank209" target="_blank" rel="noreferrer">Telegram</a>
         </div>
+      </div>
+    </aside>
 
-        <div id="page-commands" class="page hidden glass rounded-3xl p-6 soft">
-          <div class="flex items-center justify-between gap-3">
-            <div>
-              <div class="text-2xl font-extrabold">📖 Danh sách lệnh</div>
-              <div class="text-white/70 mt-1">Tổng hợp lệnh MAX trong bot.</div>
-            </div>
-            <button class="btn px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15" onclick="copyCommands()">📋 Copy</button>
-          </div>
-          <div class="grid md:grid-cols-2 gap-4 mt-6 text-sm">
-            <div class="glass rounded-3xl p-5"><div class="font-bold">🧰 Tiện ích</div><div class="mt-2 text-white/70 mono" id="cmd-utils"></div></div>
-            <div class="glass rounded-3xl p-5"><div class="font-bold">💰 Kinh tế</div><div class="mt-2 text-white/70 mono" id="cmd-eco"></div></div>
-            <div class="glass rounded-3xl p-5"><div class="font-bold">🎮 Game</div><div class="mt-2 text-white/70 mono" id="cmd-games"></div></div>
-            <div class="glass rounded-3xl p-5"><div class="font-bold">🎭 Giải trí</div><div class="mt-2 text-white/70 mono" id="cmd-fun"></div></div>
-            <div class="glass rounded-3xl p-5 md:col-span-2"><div class="font-bold">🛡️ Admin</div><div class="mt-2 text-white/70 mono" id="cmd-admin"></div></div>
-          </div>
+    <!-- Main -->
+    <main class="main">
+      <div class="topbar">
+        <div class="crumb">
+          <div class="h1" id="pageTitle">Trang chủ</div>
+          <div class="h2" id="pageSub">Kết nối Web API & điều khiển bot VIP</div>
         </div>
-
-        <div id="page-user" class="page hidden glass rounded-3xl p-6 soft">
-          <div class="flex items-center justify-between gap-3">
-            <div>
-              <div class="text-2xl font-extrabold">👤 User Dashboard</div>
-              <div class="text-white/70 mt-1">Đăng nhập bằng token lấy từ Discord DM.</div>
-            </div>
-            <div class="flex gap-2 flex-wrap">
-              <button class="btn px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15" onclick="userLogout()">🚪 Logout</button>
-              <button class="btn px-4 py-2 rounded-2xl bg-indigo-500/80 hover:bg-indigo-500" onclick="userRefresh()">🔄 Refresh</button>
-            </div>
-          </div>
-
-          <div id="userLoginBox" class="mt-6 glass rounded-3xl p-5">
-            <div class="font-bold text-lg">🔑 Đăng nhập User</div>
-            <div class="text-white/70 text-sm mt-1">Dùng <span class="mono">/token</span> để nhận token (DM) • reset: <span class="mono">/token reset</span></div>
-            <div class="mt-4 grid md:grid-cols-3 gap-3">
-              <div class="md:col-span-2">
-                <label class="text-white/70 text-sm">Token</label>
-                <input id="userTokenInput" class="w-full mt-1 px-4 py-3 rounded-2xl bg-white/10 border border-white/10 outline-none mono" placeholder="Dán token 30 ký tự..." maxlength="60"/>
-              </div>
-              <div class="flex items-end">
-                <button id="userLoginBtn" class="btn w-full px-4 py-3 rounded-2xl bg-indigo-500/80 hover:bg-indigo-500">Login</button>
-              </div>
-            </div>
-            <div class="mt-3 text-white/60 text-sm" id="userLoginMsg">—</div>
-          </div>
-
-          <div id="userDash" class="hidden mt-6 grid md:grid-cols-2 gap-4">
-            <div class="glass rounded-3xl p-5">
-              <div class="font-bold text-lg">💳 Ví & Rank</div>
-              <div class="mt-3 space-y-2 text-sm">
-                <div class="flex items-center justify-between chip rounded-2xl px-3 py-2"><span class="text-white/70">Coin</span><span id="uCoin" class="font-bold">—</span></div>
-                <div class="flex items-center justify-between chip rounded-2xl px-3 py-2"><span class="text-white/70">Level</span><span id="uLevel" class="font-bold">—</span></div>
-                <div class="flex items-center justify-between chip rounded-2xl px-3 py-2"><span class="text-white/70">XP</span><span id="uXp" class="font-bold">—</span></div>
-              </div>
-            </div>
-            <div class="glass rounded-3xl p-5">
-              <div class="font-bold text-lg">🏦 Bank & Kho</div>
-              <div class="mt-3 space-y-2 text-sm">
-                <div class="chip rounded-2xl px-3 py-2"><div class="text-white/70">Bank</div><div id="uBank" class="mono text-white/80 mt-1">—</div></div>
-                <div class="chip rounded-2xl px-3 py-2"><div class="text-white/70">Inventory</div><div id="uInv" class="mono text-white/80 mt-1">—</div></div>
-              </div>
-            </div>
-          </div>
+        <div class="actions">
+          <button class="btn" id="btnCheckApi">🔌 Check API</button>
+          <button class="btn primary" id="btnSaveApi">💾 Lưu API Base</button>
+          <button class="btn danger" id="btnLogoutAll">🚪 Logout</button>
         </div>
+      </div>
 
-        <div id="page-admin" class="page hidden glass rounded-3xl p-6 soft">
-          <div class="flex items-center justify-between gap-3">
-            <div>
-              <div class="text-2xl font-extrabold">🛡️ Admin Panel</div>
-              <div class="text-white/70 mt-1">Quản lý bot qua Web API.</div>
+      <div class="content">
+        <!-- HOME -->
+        <section id="page-home">
+          <div class="grid2">
+            <div class="card">
+              <h3>🔗 API Base</h3>
+              <div class="sub">Dán API Base (domain bot-hosting cloud) của bạn vào đây. Web sẽ tự sửa lỗi dính chữ “Base” hoặc khoảng trắng.</div>
+              <div class="sep"></div>
+              <input class="field mono" id="apiBaseInput" placeholder="https://xxxx.site.bot-hosting.cloud" />
+              <div class="row" style="margin-top:10px">
+                <button class="btn primary" id="btnHealth">✅ API Health</button>
+                <button class="btn" id="btnOpenHealth">🌐 Mở /api/health</button>
+              </div>
+              <div class="sub" style="margin-top:10px">
+                <span class="muted">Gợi ý:</span> Nếu bot-hosting cấp Allocation port là <b>20781</b>, thì Web API phải chạy đúng <b>20781</b> (không phải 8080).
+              </div>
             </div>
-            <div class="flex gap-2 flex-wrap">
-              <button class="btn px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15" onclick="adminLogout()">🚪 Logout</button>
-              <button class="btn px-4 py-2 rounded-2xl bg-emerald-500/80 hover:bg-emerald-500" onclick="adminRefresh()">🔄 Refresh</button>
+
+            <div class="card">
+              <h3>⚡ Trạng thái kết nối</h3>
+              <div class="sub">Web này chỉ là Front-end (Netlify). Bot của bạn phải chạy Web API mới quản lý được.</div>
+              <div class="sep"></div>
+
+              <table class="table">
+                <thead><tr><th>Mục</th><th>Trạng thái</th></tr></thead>
+                <tbody>
+                  <tr><td>API Health</td><td id="healthTxt" class="muted">—</td></tr>
+                  <tr><td>User</td><td id="userState" class="muted">chưa đăng nhập</td></tr>
+                  <tr><td>Admin</td><td id="adminState" class="muted">chưa đăng nhập</td></tr>
+                </tbody>
+              </table>
+
+              <div class="sub" style="margin-top:10px">
+                ✅ Nếu <b>API Health OK</b> thì bạn có thể login User/Admin và quản lý full hệ thống.
+              </div>
             </div>
           </div>
 
-          <div id="adminLoginBox" class="mt-6 glass rounded-3xl p-5">
-            <div class="font-bold text-lg">🔐 Đăng nhập Admin</div>
-            <div class="text-white/70 text-sm mt-1">Tài khoản/mật khẩu theo yêu cầu: <span class="mono">admin / tuananh2009</span></div>
-            <div class="mt-4 grid md:grid-cols-3 gap-3">
-              <div><label class="text-white/70 text-sm">Tài khoản</label><input id="adminUserInput" class="w-full mt-1 px-4 py-3 rounded-2xl bg-white/10 border border-white/10 outline-none" value="admin"/></div>
-              <div><label class="text-white/70 text-sm">Mật khẩu</label><input id="adminPassInput" type="password" class="w-full mt-1 px-4 py-3 rounded-2xl bg-white/10 border border-white/10 outline-none"/></div>
-              <div class="flex items-end"><button id="adminLoginBtn" class="btn w-full px-4 py-3 rounded-2xl bg-emerald-500/80 hover:bg-emerald-500">Login</button></div>
+          <div class="card">
+            <h3>✨ VIP Features</h3>
+            <div class="sub">
+              • Login User bằng <b>token 30 ký tự</b> (lấy bằng lệnh <span class="mono">/token</span> trong Discord).<br/>
+              • Login Admin bằng <b>tài khoản/mật khẩu </b> để quản trị hệ thống bot.<br/>
+              • Quản lý hệ thống vượt link, gửi thông báo, add coin, band/unband… tất cả 1 chạm.
             </div>
-            <div class="mt-3 text-white/60 text-sm" id="adminLoginMsg">—</div>
+          </div>
+        </section>
+
+        <!-- USER -->
+        <section id="page-user" class="hide">
+          <div class="grid2">
+            <div class="card">
+              <h3>👤 User Login</h3>
+              <div class="sub">Dán token của bạn (bot sẽ gửi token qua tin nhắn riêng khi bạn dùng <span class="mono">/token</span>).</div>
+              <div class="sep"></div>
+              <input class="field mono" id="userTokenInput" placeholder="USER_TOKEN (30 ký tự)" />
+              <div class="row" style="margin-top:10px">
+                <button class="btn primary" id="btnUserLogin">🔐 Đăng nhập</button>
+                <button class="btn" id="btnUserFetch">📥 Lấy thông tin</button>
+                <button class="btn danger" id="btnUserLogout">🚪 Logout User</button>
+              </div>
+              <div class="sub" style="margin-top:10px">
+                Tip: Nếu bạn quên token → vào Discord dùng <span class="mono">/token reset</span> để reset token mới.
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>💰 Ví & Level</h3>
+              <div class="sub">Thông tin này lấy từ API: <span class="mono">GET /api/user/me</span></div>
+              <div class="sep"></div>
+              <div class="grid3">
+                <div class="mini">
+                  <div class="k">Coin</div>
+                  <div class="v" id="uCoin">—</div>
+                </div>
+                <div class="mini">
+                  <div class="k">Level</div>
+                  <div class="v" id="uLevel">—</div>
+                </div>
+                <div class="mini">
+                  <div class="k">XP</div>
+                  <div class="v" id="uXp">—</div>
+                </div>
+              </div>
+              <div class="sep"></div>
+              <div class="row">
+                <button class="btn good" id="btnResetToken">♻️ Reset Token (API)</button>
+                <button class="btn" id="btnCopyToken">📋 Copy token</button>
+                <span class="tag" id="tokenTag">token: —</span>
+              </div>
+              <div class="sub" style="margin-top:10px">
+                Reset token API có rate limit để chống spam.
+              </div>
+            </div>
           </div>
 
-          <div id="adminDash" class="hidden mt-6 grid md:grid-cols-2 gap-4">
-<div class="glass rounded-3xl p-4 md:col-span-2">
-  <div class="font-bold">🧭 Quản lý hệ thống bot</div>
-  <div class="text-white/70 text-sm mt-1">Chọn module để quản lý trực tiếp dữ liệu trong bot.</div>
-  <div class="mt-3 flex flex-wrap gap-2" id="adminTabs">
-    <button class="btn px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15" onclick="adminTab('overview')">📊 Overview</button>
-    <button class="btn px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15" onclick="adminTab('user')">👤 User</button>
-    <button class="btn px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15" onclick="adminTab('bands')">⛔ Band/Unband</button>
-    <button class="btn px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15" onclick="adminTab('deposits')">💳 Nạp Coin</button>
-    <button class="btn px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15" onclick="adminTab('guilds')">🏠 Server & Thông Báo</button>
-    <button class="btn px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15" onclick="adminTab('shorteners')">🔗 Link Vượt</button>
-  </div>
-</div>
-            <div class="glass rounded-3xl p-5 adminMod" data-mod="overview">
-              <div class="font-bold text-lg">📊 Overview</div>
-              <div class="mt-3 space-y-2 text-sm">
-                <div class="flex items-center justify-between chip rounded-2xl px-3 py-2"><span class="text-white/70">Users</span><span id="aUsers" class="font-bold">—</span></div>
-                <div class="flex items-center justify-between chip rounded-2xl px-3 py-2"><span class="text-white/70">Clans</span><span id="aClans" class="font-bold">—</span></div>
-                <div class="flex items-center justify-between chip rounded-2xl px-3 py-2"><span class="text-white/70">Guilds</span><span id="aGuilds" class="font-bold">—</span></div>
-                <div class="flex items-center justify-between chip rounded-2xl px-3 py-2"><span class="text-white/70">Pending Deposits</span><span id="aPend" class="font-bold">—</span></div>
+          <div class="card">
+            <h3>🏦 Bank & Inventory</h3>
+            <div class="sub">Xem thông tin ngân hàng ảo + vật phẩm đang sở hữu.</div>
+            <div class="sep"></div>
+            <div class="grid2">
+              <div>
+                <div class="sub"><b>Bank</b></div>
+                <pre class="codeBox" id="uBank">{}</pre>
               </div>
-            </div>
-            <div class="glass rounded-3xl p-5 adminMod" data-mod="user">
-              <div class="font-bold text-lg">👤 Tra cứu User</div>
-              <div class="mt-3 flex gap-2">
-                <input id="lookupUid" class="flex-1 px-4 py-3 rounded-2xl bg-white/10 border border-white/10 outline-none mono" placeholder="user_id"/>
-                <button class="btn px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/15" onclick="adminLookup()">🔍</button>
+              <div>
+                <div class="sub"><b>Inventory</b></div>
+                <pre class="codeBox" id="uInv">{}</pre>
               </div>
-              <pre id="lookupResult" class="mt-3 chip rounded-2xl p-3 text-xs overflow-auto max-h-56 text-white/80 mono">—</pre>
-            </div>
-            <div class="glass rounded-3xl p-5 md:col-span-2 adminMod" data-mod="user">
-              <div class="font-bold text-lg">➕ Cộng / Trừ coin</div>
-              <div class="mt-3 grid md:grid-cols-3 gap-3">
-                <input id="coinUid" class="px-4 py-3 rounded-2xl bg-white/10 border border-white/10 outline-none mono" placeholder="user_id"/>
-                <input id="coinDelta" class="px-4 py-3 rounded-2xl bg-white/10 border border-white/10 outline-none mono" placeholder="delta"/>
-                <button class="btn px-4 py-3 rounded-2xl bg-emerald-500/80 hover:bg-emerald-500" onclick="adminAddCoin()">✅ Thực hiện</button>
-              </div>
-              <div class="mt-2 text-white/60 text-sm" id="coinMsg">—</div>
             </div>
           </div>
+        </section>
+
+        <!-- ADMIN -->
+        <section id="page-admin" class="hide">
+          <div class="grid2">
+            <div class="card">
+              <h3>🛡️ Admin Login</h3>
+              <div class="sub">Tài khoản mặc định: <span class="mono">admin / tuananh2009</span></div>
+              <div class="sep"></div>
+              <input class="field" id="adminUser" placeholder="Username" value="admin" />
+              <input class="field" id="adminPass" placeholder="Password" type="password" value="tuananh2009" style="margin-top:10px"/>
+              <div class="row" style="margin-top:10px">
+                <button class="btn primary" id="btnAdminLogin">🔐 Đăng nhập Admin</button>
+                <button class="btn" id="btnAdminOverview">📊 Overview</button>
+                <button class="btn danger" id="btnAdminLogout">🚪 Logout Admin</button>
+              </div>
+              <div class="sub" style="margin-top:10px">
+                Admin session dùng header <span class="mono">X-Admin-Token</span>.
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>📊 Tổng quan hệ thống</h3>
+              <div class="sub">API: <span class="mono">GET /api/admin/overview</span></div>
+              <div class="sep"></div>
+              <div class="grid3">
+                <div class="mini"><div class="k">Users</div><div class="v" id="ovUsers">—</div></div>
+                <div class="mini"><div class="k">Clans</div><div class="v" id="ovClans">—</div></div>
+                <div class="mini"><div class="k">Guilds</div><div class="v" id="ovGuilds">—</div></div>
+              </div>
+              <div class="sep"></div>
+              <div class="sub">Pending deposits</div>
+              <pre class="codeBox" id="ovPend">[]</pre>
+            </div>
+          </div>
+
+          <div class="grid2">
+            <div class="card">
+              <h3>🔎 Tra user theo ID</h3>
+              <div class="sub">API: <span class="mono">GET /api/admin/user/{uid}</span></div>
+              <div class="sep"></div>
+              <input class="field mono" id="lookupUid" placeholder="Nhập UID Discord (vd: 1358505048904302724)" />
+              <div class="row" style="margin-top:10px">
+                <button class="btn primary" id="btnLookup">🔍 Lookup</button>
+                <button class="btn" id="btnCopyUserJson">📋 Copy JSON</button>
+              </div>
+              <div class="sep"></div>
+              <pre class="codeBox" id="lookupOut">{}</pre>
+            </div>
+
+            <div class="card">
+              <h3>💸 Add coin / Buff coin</h3>
+              <div class="sub">API: <span class="mono">POST /api/admin/addcoin</span></div>
+              <div class="sep"></div>
+              <input class="field mono" id="addUid" placeholder="UID" />
+              <input class="field mono" id="addAmount" placeholder="Số coin (vd: 50000)" style="margin-top:10px" />
+              <div class="row" style="margin-top:10px">
+                <button class="btn good" id="btnAddCoin">➕ Add coin</button>
+                <span class="tag">Unlimited (VIP)</span>
+              </div>
+              <div class="sub" style="margin-top:10px">
+                Lưu ý: Buff coin là quyền Admin. User thường không dùng được.
+              </div>
+            </div>
+          </div>
+
+          <div class="grid2">
+            <div class="card">
+              <h3>⛔ Band / Unband</h3>
+              <div class="sub">Band user để không dùng bot (theo thời gian).</div>
+              <div class="sep"></div>
+              <input class="field mono" id="bandUid" placeholder="UID" />
+              <input class="field mono" id="bandMinutes" placeholder="Phút band (vd: 60)" style="margin-top:10px" />
+              <div class="row" style="margin-top:10px">
+                <button class="btn danger" id="btnBand">🔒 Band</button>
+                <button class="btn" id="btnListBand">📃 Danh sách band</button>
+                <button class="btn good" id="btnUnband">🔓 Unband</button>
+              </div>
+              <div class="sep"></div>
+              <pre class="codeBox" id="bandOut">[]</pre>
+            </div>
+
+            <div class="card">
+              <h3>🧠 Gợi ý vận hành VIP</h3>
+              <div class="sub">
+                • Nếu Web API OK nhưng netlify không gọi được → kiểm tra CORS hoặc API Base sai.<br/>
+                • Nếu domain cloud 502 → Web API chạy sai PORT allocation.<br/>
+                • Đừng share token user ra ngoài (bảo mật ví coin).<br/>
+                • Clan VIP: chiến clan + shop clan chạy trong Discord, Admin chỉ quản lý hệ thống tổng.
+              </div>
+              <div class="sep"></div>
+              <div class="row">
+                <a class="btn" href="https://discord.com/developers/applications" target="_blank" rel="noreferrer">🧩 Discord Dev</a>
+                <a class="btn" href="https://bot-hosting.net" target="_blank" rel="noreferrer">☁️ Bot-hosting</a>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- SHORTENERS -->
-<div id="page-shorteners" class="page hidden glass rounded-3xl p-6 soft">
-  <div class="flex items-center justify-between gap-3">
-    <div>
-      <div class="text-2xl font-extrabold">🔗 Quản lý Link Vượt</div>
-      <div class="text-white/70 mt-1">Quản lý danh sách website rút gọn (link vượt) dùng cho hệ thống key trong BOT. Có thể đồng bộ vào bot qua Admin API.</div>
-    </div>
-    <div class="flex gap-2 flex-wrap">
-      <button class="btn px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15" onclick="shortenersExport()">📦 Export</button>
-      <button class="btn px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15" onclick="shortenersImport()">📥 Import</button>
-      <button class="btn px-4 py-2 rounded-2xl bg-indigo-500/80 hover:bg-indigo-500" onclick="shortenersRefresh()">🔄 Refresh</button>
-    </div>
+        <section id="page-shorteners" class="hide">
+          <div class="card">
+            <h3>🔗 Quản lý Link Vượt (Shorteners)</h3>
+            <div class="sub">Thêm / xóa danh sách API rút gọn đang dùng cho /getkey. (Admin only)</div>
+            <div class="sep"></div>
+
+            <div class="row">
+              <button class="btn primary" id="btnLoadShort">📥 Load</button>
+              <button class="btn good" id="btnSaveShort">💾 Save</button>
+              <button class="btn" id="btnAddShort">➕ Add dòng</button>
+              <button class="btn danger" id="btnClearShort">🧹 Clear</button>
+              <span class="tag">Tối đa 50 API</span>
+            </div>
+
+            <div class="sep"></div>
+            <div class="sub">Format: mỗi dòng 1 shortener, gồm <b>name</b> và <b>api</b> (url API shorten).</div>
+            <div class="sep"></div>
+
+            <table class="table" id="shortTable">
+              <thead>
+                <tr><th>#</th><th>Name</th><th>API</th><th></th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+
+            <div class="sub">Sau khi Save, bot sẽ dùng list mới cho menu /getkey.</div>
+          </div>
+        </section>
+
+        <!-- ANNOUNCE -->
+        <section id="page-announce" class="hide">
+          <div class="grid2">
+            <div class="card">
+              <h3>📌 Set kênh thông báo</h3>
+              <div class="sub">API: <span class="mono">POST /api/admin/announce_channel</span></div>
+              <div class="sep"></div>
+              <input class="field mono" id="announceChannel" placeholder="Channel ID (vd: 123456789012345678)" />
+              <div class="row" style="margin-top:10px">
+                <button class="btn primary" id="btnSetChannel">✅ Lưu kênh</button>
+              </div>
+              <div class="sub" style="margin-top:10px">
+                Chỉ 1 kênh thông báo cho toàn bot. Bạn có thể đổi lại bất kỳ lúc nào.
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>📣 Gửi thông báo</h3>
+              <div class="sub">API: <span class="mono">POST /api/admin/announce</span></div>
+              <div class="sep"></div>
+              <textarea class="field" id="announceText" rows="6" placeholder="Nhập nội dung broadcast..."></textarea>
+              <div class="row" style="margin-top:10px">
+                <button class="btn good" id="btnSendAnn">🚀 Gửi ngay</button>
+              </div>
+              <div class="sub" style="margin-top:10px">
+                Gợi ý: bạn có thể dùng markdown đơn giản để đẹp hơn.
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>🧾 Kết quả</h3>
+            <div class="sub">Log kết quả thao tác thông báo.</div>
+            <div class="sep"></div>
+            <pre class="codeBox" id="announceOut">{}</pre>
+          </div>
+        </section>
+
+        <!-- CMD -->
+        <section id="page-cmd" class="hide">
+          <div class="card">
+            <h3>📦 Danh mục lệnh (VIP Edition)</h3>
+            <div class="sub">Đây là “bản giới thiệu” để bạn copy vào giới thiệu server hoặc menu bot. (Không ảnh hưởng số slash command).</div>
+            <div class="sep"></div>
+            <div class="grid2">
+              <div class="card" style="margin:0">
+                <h3>🎮 Giải trí & cược</h3>
+                <div class="sub">
+                  <span class="mono">/777</span> • <span class="mono">/taixiu</span> • <span class="mono">/nohu</span> • <span class="mono">/loto</span> • <span class="mono">/coinflip</span><br/>
+                  <span class="mono">/noitu</span> (nối từ) • <span class="mono">/anhgai</span> • <span class="mono">/anhtrai</span>
+                </div>
+              </div>
+              <div class="card" style="margin:0">
+                <h3>💰 Coin & ngân hàng</h3>
+                <div class="sub">
+                  <span class="mono">/napcoin</span> • <span class="mono">/xemcoin</span> • <span class="mono">/nganhang</span><br/>
+                  Lãi bank 5%/giờ, chuyển tiền, nạp coin vào bank.
+                </div>
+              </div>
+              <div class="card" style="margin:0">
+                <h3>🔑 Link vượt & nhận thưởng</h3>
+                <div class="sub">
+                  <span class="mono">/getkey</span> (chỉ hiện link vượt) • <span class="mono">/nhapkey</span> nhận coin random + daily bonus.
+                </div>
+              </div>
+              <div class="card" style="margin:0">
+                <h3>🧩 Clan VIP</h3>
+                <div class="sub">
+                  <span class="mono">/clan</span> (Tạo/Xem/Cày/Nâng)<br/>
+                  VIP: Quỹ clan • Shop clan • Chiến clan • Perk clan.
+                </div>
+              </div>
+              <div class="card" style="margin:0">
+                <h3>📈 Top & Event</h3>
+                <div class="sub">
+                  <span class="mono">/top</span> Top coin • Top vượt link • Top clan (reset tuần).
+                </div>
+              </div>
+              <div class="card" style="margin:0">
+                <h3>🛒 Shop item</h3>
+                <div class="sub">
+                  <span class="mono">/shop</span> Thuốc may mắn • Bảo vệ coin • nhiều vật phẩm khác (có hạn dùng).
+                </div>
+              </div>
+              <div class="card" style="margin:0">
+                <h3>🧰 Admin tools</h3>
+                <div class="sub">
+                  <span class="mono">/thongbao</span> • <span class="mono">/lock</span> • <span class="mono">/band</span>/<span class="mono">/unband</span> • <span class="mono">/buffcoin</span> • <span class="mono">/buffwin</span> • <span class="mono">/buffclan</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="sep"></div>
+            <div class="sub">
+              📌 <b>Note:</b> Discord giới hạn 100 slash command global. Bot VIP sẽ dùng menu & button để gom nhóm, không bắn quá giới hạn.
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
   </div>
 
-  <div class="mt-6 grid md:grid-cols-2 gap-4">
-    <div class="glass rounded-3xl p-5">
-      <div class="font-bold text-lg">➕ Thêm Web Link Vượt</div>
-      <div class="text-white/70 text-sm mt-1">
-        Nhập <b>Tên web</b> và <b>API tạo link vượt</b> (template).<br/>
-        Ví dụ API: <span class="mono">https://link4m.co/api-shorten/v2?api=XXX&url=</span>
-      </div>
-
-      <div class="mt-4 space-y-3">
-        <div>
-          <label class="text-white/70 text-sm">Tên Web</label>
-          <input id="shName" class="w-full mt-1 px-4 py-3 rounded-2xl bg-white/10 border border-white/10 outline-none" placeholder="LINK4M"/>
-        </div>
-        <div>
-          <label class="text-white/70 text-sm">API Link Vượt (template)</label>
-          <input id="shApi" class="w-full mt-1 px-4 py-3 rounded-2xl bg-white/10 border border-white/10 outline-none mono" placeholder="https://example.com/api?token=XXX&url="/>
-        </div>
-        <div class="flex gap-2">
-          <button class="btn flex-1 px-4 py-3 rounded-2xl bg-emerald-500/80 hover:bg-emerald-500" onclick="shortenersAdd()">✅ Thêm</button>
-          <button class="btn px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/15" onclick="shortenersClear()">🧹 Clear</button>
-        </div>
-      </div>
-
-      <div class="mt-3 text-white/60 text-sm" id="shMsg">—</div>
-      <div class="text-white/40 text-xs mt-2">
-        ⚠️ Nếu bạn muốn đồng bộ với bot: cần bot API thêm endpoints shorteners (admin). Hiện web lưu local + có thể import/export.
-      </div>
-    </div>
-
-    <div class="glass rounded-3xl p-5">
-      <div class="font-bold text-lg">📚 Danh sách Web</div>
-      <div class="text-white/70 text-sm mt-1">Bấm xoá để gỡ khỏi danh sách.</div>
-
-      <div class="mt-4">
-        <div class="flex gap-2">
-          <input id="shSearch" class="flex-1 px-4 py-3 rounded-2xl bg-white/10 border border-white/10 outline-none" placeholder="Tìm tên web..." oninput="shortenersRender()"/>
-          <button class="btn px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/15" onclick="shortenersResetDefaults()">↩️ Default</button>
-        </div>
-      </div>
-
-      <div class="mt-4 space-y-2 max-h-[420px] overflow-auto pr-1" id="shList">
-        <!-- list -->
-      </div>
-    </div>
-  </div>
-
-  <div class="mt-6 glass rounded-3xl p-5">
-    <div class="font-bold text-lg">🧪 Test nhanh</div>
-    <div class="text-white/70 text-sm mt-1">
-      Dán 1 link đích để kiểm tra API template ghép url.
-    </div>
-    <div class="mt-3 grid md:grid-cols-3 gap-3">
-      <input id="shTestUrl" class="md:col-span-2 px-4 py-3 rounded-2xl bg-white/10 border border-white/10 outline-none mono" placeholder="https://yourdestinationlink.com"/>
-      <button class="btn px-4 py-3 rounded-2xl bg-indigo-500/80 hover:bg-indigo-500" onclick="shortenersBuildTest()">🔧 Build URL</button>
-    </div>
-    <pre id="shTestOut" class="mt-3 chip rounded-2xl p-3 text-xs overflow-auto text-white/80 mono">—</pre>
-  </div>
-</div>
-
-</div>
-
-      </div>
-    </div>
-
-    <div id="settingsModal" class="hidden fixed inset-0 bg-black/60 z-50 px-4">
-      <div class="max-w-xl mx-auto mt-24 glass rounded-3xl p-6 soft">
-        <div class="flex items-center justify-between">
-          <div class="text-xl font-bold">⚙️ API Settings</div>
-          <button class="btn px-3 py-2 rounded-2xl bg-white/10 hover:bg-white/15" onclick="closeSettings()">✖️</button>
-        </div>
-        <div class="text-white/70 text-sm mt-2">Nhập địa chỉ Web API của bot. Ví dụ: <span class="mono">http://YOUR_VPS_IP:8080</span></div>
-        <div class="mt-4">
-          <label class="text-white/70 text-sm">API Base URL</label>
-          <input id="apiBaseInput" class="w-full mt-1 px-4 py-3 rounded-2xl bg-white/10 border border-white/10 outline-none mono" placeholder="http://localhost:8080"/>
-        </div>
-        <div class="mt-4 flex gap-2 flex-wrap">
-          <button class="btn px-4 py-2 rounded-2xl bg-indigo-500/80 hover:bg-indigo-500" onclick="saveApiBase()">💾 Lưu</button>
-          <button class="btn px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15" onclick="checkHealth()">🔌 Test</button>
-        </div>
-      </div>
-    </div>
+  <div class="toast" id="toast">
+    <b id="toastTitle">Thông báo</b>
+    <span id="toastMsg">—</span>
   </div>
 
 <script>
-  const COMMANDS = {
-    utils: ["/menu","/help","/ping","/uptime","/avatar","/serverinfo","/stats","/rank","/toprank","/support","/remind","/myreminds","/delremind"],
-    eco: ["/xemcoin","/napcoin","/getkey","/nhapkey","/nganhang","/mocnap","/vip","/shop","/muaitem","/kho","/work","/beg","/ancuop","/chuyencoin","/diemdanh","/token"],
-    games:["/777","/taixiu","/nohu","/rps","/loto","/coinflip","/dice","/8ball","/choose"],
-    fun:["/noitu","/anhgai","/anhtrai","/clan","/poll","/giveaway"],
-    admin:["/on","/off","/lock","/band","/unband","/thongbao","/setlog","/setbotchannel","/cooldown","/autodelete","/backup","/restore","/buffcoin","/buffmocnap","/buffclan","/buffwin","/warn","/warns","/clearwarn","/timeout","/untimeout","/anticaps","/maxmentions"]
+  // ===== Storage =====
+  const LS = {
+    apiBase: "vip_api_base",
+    userToken: "vip_user_token",
+    adminToken: "vip_admin_token"
   };
-  function renderCommands(){
-    document.getElementById("cmd-utils").textContent = COMMANDS.utils.join("\n");
-    document.getElementById("cmd-eco").textContent = COMMANDS.eco.join("\n");
-    document.getElementById("cmd-games").textContent = COMMANDS.games.join("\n");
-    document.getElementById("cmd-fun").textContent = COMMANDS.fun.join("\n");
-    document.getElementById("cmd-admin").textContent = COMMANDS.admin.join("\n");
-  }
-  function copyCommands(){
-    const all = Object.values(COMMANDS).flat().join("\n");
-    navigator.clipboard.writeText(all).then(()=>toast("✅ Đã copy danh sách lệnh"));
-  }
-  function go(page){
-    document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));
-    document.getElementById("page-"+page).classList.remove("hidden");
-    history.replaceState({}, "", "#"+page);
-  }
-  (function initRouter(){
-    const hash = (location.hash || "#home").replace("#","");
-    go(hash);
-  })();
 
-  function openSettings(){
-    document.getElementById("settingsModal").classList.remove("hidden");
-    document.getElementById("apiBaseInput").value = getApiBase();
+  const $ = (id)=>document.getElementById(id);
+  const toastEl = $("toast");
+  const toastTitle = $("toastTitle");
+  const toastMsg = $("toastMsg");
+
+  function showToast(title, msg){
+    toastTitle.textContent = title || "Thông báo";
+    toastMsg.textContent = msg || "";
+    toastEl.classList.add("show");
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(()=>toastEl.classList.remove("show"), 3500);
   }
-  function closeSettings(){ document.getElementById("settingsModal").classList.add("hidden"); }
-  function getApiBase(){ return localStorage.getItem("API_BASE") || ""; }
-  function setApiBase(v){
-    localStorage.setItem("API_BASE", v);
-    document.getElementById("apiBaseTxt").textContent = v || "—";
-  }
-  function saveApiBase(){
-    let v = document.getElementById("apiBaseInput").value.trim();
+
+  function normalizeApiBase(v){
+    v = (v||"").trim();
     v = v.replace(/\s+/g,"");
+    // Fix case: ...-a971-Base1da3... when UI wraps
     v = v.replace(/-Base(?=[0-9a-fA-F]{4})/,"-");
     v = v.replace(/\/+$/,"");
-    setApiBase(v);
-    toast("✅ Đã lưu API Base");
-    closeSettings();
+    return v;
   }
 
-  async function api(path, opts={}){
+  function getApiBase(){
+    return normalizeApiBase(localStorage.getItem(LS.apiBase) || $("apiBaseInput").value || "");
+  }
+
+  function setApiBase(v){
+    v = normalizeApiBase(v);
+    localStorage.setItem(LS.apiBase, v);
+    $("apiBaseInput").value = v;
+  }
+
+  function getUserToken(){ return (localStorage.getItem(LS.userToken)||"").trim(); }
+  function setUserToken(t){ localStorage.setItem(LS.userToken, (t||"").trim()); }
+  function getAdminToken(){ return (localStorage.getItem(LS.adminToken)||"").trim(); }
+  function setAdminToken(t){ localStorage.setItem(LS.adminToken, (t||"").trim()); }
+
+  // ===== API helper with timeout =====
+  async function api(path, {method="GET", body=null, auth=null, admin=null}={}){
     const base = getApiBase();
     if(!base) throw new Error("NO_API_BASE");
     const url = base + path;
+
+    const headers = {"Content-Type":"application/json"};
+    if(auth) headers["Authorization"] = "Bearer " + auth;
+    if(admin) headers["X-Admin-Token"] = admin;
+
     const controller = new AbortController();
-    const t = setTimeout(()=>controller.abort(), 8000);
-    const res = await fetch(url, {...opts, mode:'cors', signal: controller.signal});
+    const t = setTimeout(()=>controller.abort(), 9000);
+
+    const res = await fetch(url, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+      mode: "cors",
+      signal: controller.signal
+    }).catch(e=>{
+      clearTimeout(t);
+      throw e;
+    });
+
     clearTimeout(t);
-    const text = await res.text();
+
     let data = null;
-    try{ data = JSON.parse(text); }catch(e){ data = {raw:text}; }
-    if(!res.ok) throw Object.assign(new Error("HTTP_"+res.status), {status:res.status, data});
+    try{ data = await res.json(); }catch(e){ data = null; }
+
+    if(!res.ok){
+      const err = (data && (data.error || data.message)) ? (data.error||data.message) : ("HTTP_" + res.status);
+      const ex = new Error(err);
+      ex.status = res.status;
+      ex.data = data;
+      throw ex;
+    }
     return data;
   }
 
+  // ===== UI pages =====
+  const pages = ["home","user","admin","shorteners","announce","cmd"];
+  function switchPage(p){
+    pages.forEach(x=>{
+      const sec = document.querySelector("#page-" + x);
+      if(sec) sec.classList.toggle("hide", x!==p);
+      document.querySelectorAll(".navBtn").forEach(b=>{
+        b.classList.toggle("active", b.dataset.page===p);
+      });
+    });
+
+    const titleMap = {
+      home:["Trang chủ","Kết nối Web API & điều khiển bot VIP"],
+      user:["User","Ví coin, level, token & inventory"],
+      admin:["Admin","Quản lý hệ thống bot bằng Web API"],
+      shorteners:["Link vượt","Quản lý API rút gọn (Admin)"],
+      announce:["Thông báo","Set kênh + gửi broadcast"],
+      cmd:["Lệnh trong bot","Danh mục lệnh VIP để giới thiệu"]
+    };
+    const t = titleMap[p] || ["Panel","VIP Control Panel"];
+    $("pageTitle").textContent = t[0];
+    $("pageSub").textContent = t[1];
+
+    location.hash = "#"+p;
+  }
+
+  // ===== Health =====
   async function checkHealth(){
     try{
       const d = await api("/api/health");
-      document.getElementById("apiHealthTxt").textContent = d.ok ? "✅ OK" : "⚠️ lỗi";
-      toast("✅ API OK");
+      $("healthTxt").textContent = d.ok ? "✅ OK" : "⚠️ lỗi";
+      $("healthTxt").className = d.ok ? "good" : "warn";
+      $("miniHealth").textContent = d.ok ? "OK" : "WARN";
+      $("miniConn").textContent = d.ok ? "Sẵn sàng" : "Chưa";
+      showToast("✅ API OK", "Kết nối Web API thành công.");
+      return true;
     }catch(e){
-      document.getElementById("apiHealthTxt").textContent = "❌ Không kết nối";
-      toast("❌ API lỗi. Kiểm tra API Base + bot đã bật Web API đúng PORT hosting");
+      $("healthTxt").textContent = "❌ Không kết nối";
+      $("healthTxt").className = "bad";
+      $("miniHealth").textContent = "OFF";
+      $("miniConn").textContent = "Chưa";
+      if(String(e).includes("AbortError")){
+        showToast("⏱️ Timeout", "Bot-hosting proxy chưa trỏ đúng port hoặc API chưa chạy.");
+      }else{
+        showToast("❌ API lỗi", "Kiểm tra API Base + bot đã bật Web API đúng PORT hosting.");
+      }
+      return false;
     }
   }
 
-  function userToken(){ return localStorage.getItem("USER_TOKEN") || ""; }
-  function setUserToken(t){
-    localStorage.setItem("USER_TOKEN", t);
-    document.getElementById("userStatusTxt").textContent = t ? "✅ logged" : "chưa đăng nhập";
+  // ===== User =====
+  async function userLogin(){
+    const token = $("userTokenInput").value.trim();
+    if(!token) return showToast("Thiếu token", "Dán token user (bot gửi qua DM).");
+    try{
+      await api("/api/user/login", {method:"POST", body:{token}});
+      setUserToken(token);
+      $("userState").textContent = "✅ đã đăng nhập";
+      $("userState").className = "good";
+      showToast("✅ User login", "Đăng nhập thành công.");
+      await userFetch();
+    }catch(e){
+      showToast("❌ Login fail", e.message || "BAD_TOKEN");
+    }
   }
+
+  async function userFetch(){
+    const token = getUserToken() || $("userTokenInput").value.trim();
+    if(!token) return showToast("Chưa có token", "Hãy login user trước.");
+    try{
+      const d = await api("/api/user/me", {auth: token});
+      $("uCoin").textContent = String(d.coin ?? "—");
+      $("uLevel").textContent = String(d.level ?? "—");
+      $("uXp").textContent = String(d.xp ?? "—");
+      $("uBank").textContent = JSON.stringify(d.bank ?? {}, null, 2);
+      $("uInv").textContent = JSON.stringify(d.inventory ?? {}, null, 2);
+      $("tokenTag").textContent = "token: " + token.slice(0,6) + "..." + token.slice(-6);
+      showToast("📥 Đã tải", "Cập nhật thông tin user.");
+      $("userState").textContent = "✅ đã đăng nhập";
+      $("userState").className = "good";
+    }catch(e){
+      showToast("❌ Fetch fail", e.message || "UNAUTHORIZED");
+    }
+  }
+
+  async function userResetToken(){
+    const token = getUserToken();
+    if(!token) return showToast("Chưa login", "Đăng nhập user trước.");
+    try{
+      const d = await api("/api/user/reset_token", {method:"POST", auth: token});
+      if(d.token){
+        setUserToken(d.token);
+        $("userTokenInput").value = d.token;
+        $("tokenTag").textContent = "token: " + d.token.slice(0,6) + "..." + d.token.slice(-6);
+        showToast("♻️ Token mới", "Đã reset token thành công. Copy token mới để dùng.");
+      }else{
+        showToast("⚠️", "Reset token OK nhưng không trả token.");
+      }
+    }catch(e){
+      if(e.message==="RATE_LIMIT"){
+        showToast("⛔ Rate limit", "Bạn reset quá nhanh. Thử lại sau.");
+      }else{
+        showToast("❌ Reset fail", e.message || "UNAUTHORIZED");
+      }
+    }
+  }
+
   function userLogout(){
     setUserToken("");
-    document.getElementById("userDash").classList.add("hidden");
-    document.getElementById("userLoginBox").classList.remove("hidden");
-    toast("🚪 Đã logout user");
+    $("userTokenInput").value = "";
+    $("userState").textContent = "chưa đăng nhập";
+    $("userState").className = "muted";
+    $("uCoin").textContent = "—";
+    $("uLevel").textContent = "—";
+    $("uXp").textContent = "—";
+    $("uBank").textContent = "{}";
+    $("uInv").textContent = "{}";
+    $("tokenTag").textContent = "token: —";
+    showToast("👤 Logout", "Đã đăng xuất User.");
   }
 
-  let lockUserBtn=false;
-  document.getElementById("userLoginBtn").addEventListener("click", async ()=>{
-    if(lockUserBtn) return;
-    lockUserBtn=true; setTimeout(()=>lockUserBtn=false,2500);
-    const t = document.getElementById("userTokenInput").value.trim();
-    const msg = document.getElementById("userLoginMsg");
-    if(t.length < 10){ msg.textContent="❌ Token không hợp lệ"; return; }
-    msg.textContent="⏳ Đang đăng nhập...";
+  // ===== Admin =====
+  async function adminLogin(){
+    const username = $("adminUser").value.trim();
+    const password = $("adminPass").value.trim();
     try{
-      await api("/api/user/login", {method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({token:t})});
-      setUserToken(t);
-      msg.textContent="✅ Đăng nhập thành công!";
-      await userRefresh();
+      const d = await api("/api/admin/login", {method:"POST", body:{username,password}});
+      if(d.session){
+        setAdminToken(d.session);
+        $("adminState").textContent = "✅ đã đăng nhập";
+        $("adminState").className = "good";
+        showToast("🛡️ Admin OK", "Đăng nhập admin thành công.");
+        await adminOverview();
+      }else{
+        showToast("⚠️", "Login OK nhưng không có session.");
+      }
     }catch(e){
-      msg.textContent="❌ Sai token hoặc API lỗi.";
-      toast("❌ Login thất bại");
+      showToast("❌ Admin fail", e.message || "BAD_CRED");
     }
-  });
+  }
 
-  async function userRefresh(){
-    const t = userToken();
-    if(!t) return;
+  async function adminOverview(){
+    const sess = getAdminToken();
+    if(!sess) return showToast("Chưa login", "Đăng nhập Admin trước.");
     try{
-      const me = await api("/api/user/me", { headers:{ "Authorization":"Bearer "+t } });
-      document.getElementById("userDash").classList.remove("hidden");
-      document.getElementById("userLoginBox").classList.add("hidden");
-      document.getElementById("uCoin").textContent = formatNum(me.coin);
-      document.getElementById("uLevel").textContent = me.level;
-      document.getElementById("uXp").textContent = me.xp;
-      document.getElementById("uBank").textContent = JSON.stringify(me.bank||{}, null, 2);
-      document.getElementById("uInv").textContent = JSON.stringify(me.inventory||{}, null, 2);
-      toast("✅ Cập nhật user");
-    }catch(e){ toast("⚠️ Không lấy được data user"); }
+      const d = await api("/api/admin/overview", {admin: sess});
+      $("ovUsers").textContent = String(d.users ?? "—");
+      $("ovClans").textContent = String(d.clans ?? "—");
+      $("ovGuilds").textContent = String(d.guilds ?? "—");
+      $("ovPend").textContent = JSON.stringify(d.pending_deposits ?? [], null, 2);
+      showToast("📊 Overview", "Đã cập nhật tổng quan.");
+      $("adminState").textContent = "✅ đã đăng nhập";
+      $("adminState").className = "good";
+    }catch(e){
+      showToast("❌ Overview fail", e.message || "UNAUTHORIZED");
+    }
   }
 
-  function adminSession(){ return localStorage.getItem("ADMIN_SESSION") || ""; }
-  function setAdminSession(s){
-    localStorage.setItem("ADMIN_SESSION", s);
-    document.getElementById("adminStatusTxt").textContent = s ? "✅ logged" : "chưa đăng nhập";
-  }
   function adminLogout(){
-    setAdminSession("");
-    document.getElementById("adminDash").classList.add("hidden");
-    document.getElementById("adminLoginBox").classList.remove("hidden");
-    toast("🚪 Đã logout admin");
-  }
-
-  let lockAdminBtn=false;
-  document.getElementById("adminLoginBtn").addEventListener("click", async ()=>{
-    if(lockAdminBtn) return;
-    lockAdminBtn=true; setTimeout(()=>lockAdminBtn=false,2500);
-    const u = document.getElementById("adminUserInput").value.trim();
-    const p = document.getElementById("adminPassInput").value;
-    const msg = document.getElementById("adminLoginMsg");
-    msg.textContent="⏳ Đang đăng nhập...";
-    try{
-      const d = await api("/api/admin/login", {method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({username:u,password:p})});
-      setAdminSession(d.session);
-      msg.textContent="✅ Đăng nhập admin thành công!";
-      await adminRefresh();
-    }catch(e){
-      msg.textContent="❌ Sai tài khoản/mật khẩu hoặc API lỗi.";
-      toast("❌ Admin login thất bại");
-    }
-  });
-
-  async function adminRefresh(){
-    const s = adminSession();
-    if(!s) return;
-    try{
-      const d = await api("/api/admin/overview", { headers:{ "X-Admin-Token": s } });
-      document.getElementById("adminDash").classList.remove("hidden");
-      document.getElementById("adminLoginBox").classList.add("hidden");
-      document.getElementById("aUsers").textContent = d.users;
-      document.getElementById("aClans").textContent = d.clans;
-      document.getElementById("aGuilds").textContent = d.guilds;
-      document.getElementById("aPend").textContent = d.pending_deposits;
-      toast("✅ Cập nhật overview");
-    }catch(e){ toast("⚠️ Không lấy overview admin"); }
+    setAdminToken("");
+    $("adminState").textContent = "chưa đăng nhập";
+    $("adminState").className = "muted";
+    showToast("🛡️ Logout", "Đã đăng xuất Admin.");
   }
 
   async function adminLookup(){
-    const s = adminSession();
-    if(!s) return toast("❌ Chưa login admin");
-    const uid = document.getElementById("lookupUid").value.trim();
-    if(!uid) return;
+    const sess = getAdminToken();
+    const uid = Number(($("lookupUid").value||"").trim());
+    if(!sess) return showToast("Chưa login", "Đăng nhập Admin trước.");
+    if(!uid) return showToast("Thiếu UID", "Nhập UID cần tra.");
     try{
-      const d = await api("/api/admin/user/"+encodeURIComponent(uid), { headers:{ "X-Admin-Token": s } });
-      document.getElementById("lookupResult").textContent = JSON.stringify(d.data, null, 2);
-    }catch(e){ document.getElementById("lookupResult").textContent="❌ Không tìm thấy hoặc lỗi API"; }
-  }
-
-  async function adminAddCoin(){
-    const s = adminSession();
-    if(!s) return toast("❌ Chưa login admin");
-    const uid = document.getElementById("coinUid").value.trim();
-    const delta = document.getElementById("coinDelta").value.trim();
-    if(!uid || !delta) return toast("❌ Thiếu user_id hoặc delta");
-    try{
-      const d = await api("/api/admin/addcoin", {method:"POST", headers:{ "X-Admin-Token": s, "Content-Type":"application/json" }, body: JSON.stringify({user_id:Number(uid), delta:Number(delta)})});
-      document.getElementById("coinMsg").textContent = "✅ OK • Coin mới: " + formatNum(d.coin);
-      toast("✅ Đã cập nhật coin");
+      const d = await api("/api/admin/user/" + uid, {admin: sess});
+      $("lookupOut").textContent = JSON.stringify(d.data ?? {}, null, 2);
+      showToast("🔎 Lookup OK", "Đã tải dữ liệu user.");
     }catch(e){
-      document.getElementById("coinMsg").textContent = "❌ Lỗi cập nhật coin";
-      toast("❌ AddCoin lỗi");
+      showToast("❌ Lookup fail", e.message || "BAD_UID");
     }
   }
 
-  function logoutAll(){ userLogout(); adminLogout(); }
-  function toast(txt){
-    const el = document.createElement("div");
-    el.className = "fixed bottom-5 left-1/2 -translate-x-1/2 glass rounded-2xl px-4 py-2 text-sm soft z-[60]";
-    el.textContent = txt;
-    document.body.appendChild(el);
-    setTimeout(()=>el.remove(), 2200);
+  async function adminAddCoin(){
+    const sess = getAdminToken();
+    if(!sess) return showToast("Chưa login", "Đăng nhập Admin trước.");
+    const uid = Number(($("addUid").value||"").trim());
+    const amount = Number(($("addAmount").value||"").trim());
+    if(!uid || !amount) return showToast("Thiếu dữ liệu", "Nhập UID và số coin.");
+    try{
+      const d = await api("/api/admin/addcoin", {method:"POST", admin:sess, body:{uid, amount}});
+      showToast("✅ Add coin", "Đã cộng coin thành công.");
+    }catch(e){
+      showToast("❌ Add fail", e.message || "UNAUTHORIZED");
+    }
   }
-  function formatNum(n){ try{ return Number(n).toLocaleString("vi-VN"); }catch(e){ return n; } }
 
-  renderCommands();
-  setApiBase(getApiBase());
-  setUserToken(userToken());
-  setAdminSession(adminSession());
-  if(userToken()) userRefresh();
-  if(adminSession()) adminRefresh();
+  async function adminBand(){
+    const sess = getAdminToken();
+    if(!sess) return showToast("Chưa login", "Đăng nhập Admin trước.");
+    const uid = Number(($("bandUid").value||"").trim());
+    const minutes = Number(($("bandMinutes").value||"").trim());
+    if(!uid || !minutes) return showToast("Thiếu dữ liệu", "Nhập UID và phút band.");
+    try{
+      const d = await api("/api/admin/band", {method:"POST", admin:sess, body:{uid, minutes}});
+      showToast("🔒 Band", "Đã band user.");
+      await adminBandList();
+    }catch(e){
+      showToast("❌ Band fail", e.message || "UNAUTHORIZED");
+    }
+  }
+
+  async function adminBandList(){
+    const sess = getAdminToken();
+    if(!sess) return showToast("Chưa login", "Đăng nhập Admin trước.");
+    try{
+      const d = await api("/api/admin/bands", {admin:sess});
+      $("bandOut").textContent = JSON.stringify(d.items ?? [], null, 2);
+      showToast("📃 Band list", "Đã cập nhật danh sách.");
+    }catch(e){
+      showToast("❌ List fail", e.message || "UNAUTHORIZED");
+    }
+  }
+
+  async function adminUnband(){
+    const sess = getAdminToken();
+    if(!sess) return showToast("Chưa login", "Đăng nhập Admin trước.");
+    const uid = Number(($("bandUid").value||"").trim());
+    if(!uid) return showToast("Thiếu UID", "Nhập UID để unband.");
+    try{
+      const d = await api("/api/admin/unband", {method:"POST", admin:sess, body:{uid}});
+      showToast("🔓 Unband", "Đã unband user.");
+      await adminBandList();
+    }catch(e){
+      showToast("❌ Unband fail", e.message || "UNAUTHORIZED");
+    }
+  }
+
+  // ===== Shorteners =====
+  function shortRow(i, item){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="muted">${i+1}</td>
+      <td><input class="field" data-k="name" value="${escapeHtml(item?.name||"")}" placeholder="Name (vd: LINK4M)" /></td>
+      <td><input class="field mono" data-k="api" value="${escapeHtml(item?.api||"")}" placeholder="https://...&url=" /></td>
+      <td style="width:64px"><button class="btn danger" style="padding:10px 12px" data-act="del">🗑️</button></td>
+    `;
+    tr.querySelector('[data-act="del"]').onclick = ()=>{
+      tr.remove();
+      renumberShort();
+    };
+    return tr;
+  }
+
+  function renumberShort(){
+    const tb = $("shortTable").querySelector("tbody");
+    [...tb.querySelectorAll("tr")].forEach((tr, idx)=>{
+      tr.children[0].textContent = String(idx+1);
+    });
+  }
+
+  function getShortItems(){
+    const tb = $("shortTable").querySelector("tbody");
+    const out = [];
+    [...tb.querySelectorAll("tr")].forEach(tr=>{
+      const name = tr.querySelector('input[data-k="name"]').value.trim();
+      const apiUrl = tr.querySelector('input[data-k="api"]').value.trim();
+      if(name && apiUrl) out.push({name, api: apiUrl});
+    });
+    return out;
+  }
+
+  async function loadShorteners(){
+    const sess = getAdminToken();
+    if(!sess) return showToast("Chưa login", "Đăng nhập Admin trước.");
+    try{
+      const d = await api("/api/admin/shorteners", {admin:sess});
+      const tb = $("shortTable").querySelector("tbody");
+      tb.innerHTML = "";
+      const items = Array.isArray(d.items) ? d.items : [];
+      items.forEach((x,i)=>tb.appendChild(shortRow(i,x)));
+      showToast("📥 Loaded", "Đã load danh sách shorteners.");
+    }catch(e){
+      showToast("❌ Load fail", e.message || "UNAUTHORIZED");
+    }
+  }
+
+  async function saveShorteners(){
+    const sess = getAdminToken();
+    if(!sess) return showToast("Chưa login", "Đăng nhập Admin trước.");
+    const items = getShortItems();
+    try{
+      await api("/api/admin/shorteners", {method:"POST", admin:sess, body:{items}});
+      showToast("💾 Saved", "Đã lưu danh sách shorteners.");
+    }catch(e){
+      showToast("❌ Save fail", e.message || "UNAUTHORIZED");
+    }
+  }
+
+  function addShortRow(){
+    const tb = $("shortTable").querySelector("tbody");
+    tb.appendChild(shortRow(tb.children.length, {name:"",api:""}));
+    renumberShort();
+  }
+
+  function clearShort(){
+    $("shortTable").querySelector("tbody").innerHTML="";
+    showToast("🧹 Cleared", "Đã xóa hết (chưa Save).");
+  }
+
+  // ===== Announce =====
+  async function setAnnounceChannel(){
+    const sess = getAdminToken();
+    if(!sess) return showToast("Chưa login", "Đăng nhập Admin trước.");
+    const channel_id = ($("announceChannel").value||"").trim();
+    if(!channel_id) return showToast("Thiếu Channel ID", "Nhập Channel ID.");
+    try{
+      const d = await api("/api/admin/announce_channel", {method:"POST", admin:sess, body:{channel_id}});
+      $("announceOut").textContent = JSON.stringify(d, null, 2);
+      showToast("✅ Saved", "Đã lưu kênh thông báo.");
+    }catch(e){
+      showToast("❌ Fail", e.message || "UNAUTHORIZED");
+    }
+  }
+
+  async function sendAnnounce(){
+    const sess = getAdminToken();
+    if(!sess) return showToast("Chưa login", "Đăng nhập Admin trước.");
+    const content = ($("announceText").value||"").trim();
+    if(!content) return showToast("Thiếu nội dung", "Nhập nội dung broadcast.");
+    try{
+      const d = await api("/api/admin/announce", {method:"POST", admin:sess, body:{content}});
+      $("announceOut").textContent = JSON.stringify(d, null, 2);
+      showToast("🚀 Sent", "Đã gửi thông báo.");
+    }catch(e){
+      showToast("❌ Fail", e.message || "UNAUTHORIZED");
+    }
+  }
+
+  // ===== Utilities =====
+  function escapeHtml(s){
+    return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+  }
+  async function copyText(t){
+    try{
+      await navigator.clipboard.writeText(t);
+      showToast("📋 Copied", "Đã copy vào clipboard.");
+    }catch(e){
+      showToast("⚠️ Copy fail", "Trình duyệt chặn clipboard. Hãy copy thủ công.");
+    }
+  }
+
+  // ===== Wire events =====
+  document.querySelectorAll(".navBtn").forEach(btn=>{
+    btn.addEventListener("click", ()=> switchPage(btn.dataset.page));
+  });
+
+  $("btnSaveApi").onclick = ()=>{ setApiBase($("apiBaseInput").value); showToast("💾 Saved", "Đã lưu API Base."); };
+  $("btnCheckApi").onclick = checkHealth;
+  $("btnHealth").onclick = checkHealth;
+  $("btnOpenHealth").onclick = ()=>{
+    const base = getApiBase();
+    if(!base) return showToast("Thiếu API Base", "Hãy dán API Base trước.");
+    window.open(base + "/api/health", "_blank");
+  };
+
+  $("btnUserLogin").onclick = userLogin;
+  $("btnUserFetch").onclick = userFetch;
+  $("btnUserLogout").onclick = userLogout;
+  $("btnResetToken").onclick = userResetToken;
+  $("btnCopyToken").onclick = ()=> copyText(getUserToken() || $("userTokenInput").value.trim());
+
+  $("btnAdminLogin").onclick = adminLogin;
+  $("btnAdminOverview").onclick = adminOverview;
+  $("btnAdminLogout").onclick = adminLogout;
+
+  $("btnLookup").onclick = adminLookup;
+  $("btnCopyUserJson").onclick = ()=> copyText($("lookupOut").textContent || "{}");
+  $("btnAddCoin").onclick = adminAddCoin;
+
+  $("btnBand").onclick = adminBand;
+  $("btnListBand").onclick = adminBandList;
+  $("btnUnband").onclick = adminUnband;
+
+  $("btnLoadShort").onclick = loadShorteners;
+  $("btnSaveShort").onclick = saveShorteners;
+  $("btnAddShort").onclick = addShortRow;
+  $("btnClearShort").onclick = clearShort;
+
+  $("btnSetChannel").onclick = setAnnounceChannel;
+  $("btnSendAnn").onclick = sendAnnounce;
+
+  $("btnLogoutAll").onclick = ()=>{
+    userLogout();
+    adminLogout();
+    showToast("🚪 Logout", "Đã đăng xuất toàn bộ.");
+  };
+
+  // ===== Initial =====
+  (function init(){
+    // Restore API base + tokens
+    const base = localStorage.getItem(LS.apiBase) || "";
+    if(base) $("apiBaseInput").value = normalizeApiBase(base);
+
+    const u = getUserToken();
+    if(u) $("userTokenInput").value = u;
+
+    if(getAdminToken()){
+      $("adminState").textContent = "✅ đã đăng nhập";
+      $("adminState").className = "good";
+    }
+
+    // Hash routing
+    const p = (location.hash||"").replace("#","") || "home";
+    switchPage(p && pages.includes(p) ? p : "home");
+
+    // Quick health auto
+    setTimeout(checkHealth, 450);
+  })();
 </script>
 </body>
 </html>
-<!-- Bands -->
-<div class="glass rounded-3xl p-5 md:col-span-2 adminMod hidden" data-mod="bands">
-  <div class="flex items-center justify-between gap-3">
-    <div>
-      <div class="font-bold text-lg">⛔ Band / Unband</div>
-      <div class="text-white/70 text-sm">Xem danh sách band + band/unband trực tiếp.</div>
-    </div>
-    <button class="btn px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15" onclick="adminLoadBands()">🔄 Refresh</button>
-  </div>
-
-  <div class="mt-4 grid md:grid-cols-4 gap-3">
-    <input id="bandUid" class="px-4 py-3 rounded-2xl bg-white/10 border border-white/10 outline-none mono" placeholder="user_id"/>
-    <input id="bandMinutes" class="px-4 py-3 rounded-2xl bg-white/10 border border-white/10 outline-none mono" placeholder="minutes"/>
-    <input id="bandReason" class="md:col-span-2 px-4 py-3 rounded-2xl bg-white/10 border border-white/10 outline-none" placeholder="Lý do (tuỳ chọn)"/>
-  </div>
-  <div class="mt-3 flex gap-2 flex-wrap">
-    <button class="btn px-4 py-2 rounded-2xl bg-red-500/70 hover:bg-red-500" onclick="adminBand()">⛔ Band</button>
-    <button class="btn px-4 py-2 rounded-2xl bg-emerald-500/80 hover:bg-emerald-500" onclick="adminUnband()">✅ Unband</button>
-  </div>
-  <pre id="bandsOut" class="mt-4 chip rounded-2xl p-3 text-xs overflow-auto max-h-72 text-white/80 mono">—</pre>
-</div>
-
-<!-- Deposits -->
-<div class="glass rounded-3xl p-5 md:col-span-2 adminMod hidden" data-mod="deposits">
-  <div class="flex items-center justify-between gap-3">
-    <div>
-      <div class="font-bold text-lg">💳 Nạp Coin (Pending)</div>
-      <div class="text-white/70 text-sm">Xem danh sách giao dịch nạp đang chờ trong bot.</div>
-    </div>
-    <button class="btn px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15" onclick="adminLoadDeposits()">🔄 Refresh</button>
-  </div>
-  <pre id="depOut" class="mt-4 chip rounded-2xl p-3 text-xs overflow-auto max-h-96 text-white/80 mono">—</pre>
-</div>
-
-<!-- Guilds -->
-<div class="glass rounded-3xl p-5 md:col-span-2 adminMod hidden" data-mod="guilds">
-  <div class="flex items-center justify-between gap-3">
-    <div>
-      <div class="font-bold text-lg">🏠 Server & Thông Báo</div>
-      <div class="text-white/70 text-sm">Chọn server, set kênh thông báo và gửi thông báo.</div>
-    </div>
-    <button class="btn px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15" onclick="adminLoadGuilds()">🔄 Refresh</button>
-  </div>
-
-  <div class="mt-4 grid md:grid-cols-3 gap-3">
-    <select id="guildSelect" class="px-4 py-3 rounded-2xl bg-white/10 border border-white/10 outline-none"></select>
-    <input id="announceChannelId" class="px-4 py-3 rounded-2xl bg-white/10 border border-white/10 outline-none mono" placeholder="announce_channel_id"/>
-    <button class="btn px-4 py-3 rounded-2xl bg-indigo-500/80 hover:bg-indigo-500" onclick="adminSetAnnounceChannel()">✅ Set Kênh</button>
-  </div>
-
-  <div class="mt-3">
-    <textarea id="announceContent" class="w-full min-h-[110px] px-4 py-3 rounded-2xl bg-white/10 border border-white/10 outline-none" placeholder="Nhập nội dung thông báo..."></textarea>
-    <div class="mt-2 flex gap-2">
-      <button class="btn px-4 py-2 rounded-2xl bg-emerald-500/80 hover:bg-emerald-500" onclick="adminSendAnnounce()">📣 Gửi</button>
-    </div>
-  </div>
-
-  <pre id="guildOut" class="mt-4 chip rounded-2xl p-3 text-xs overflow-auto max-h-72 text-white/80 mono">—</pre>
-</div>
-
-<!-- Shorteners (sync with bot) -->
-<div class="glass rounded-3xl p-5 md:col-span-2 adminMod hidden" data-mod="shorteners">
-  <div class="flex items-center justify-between gap-3">
-    <div>
-      <div class="font-bold text-lg">🔗 Link Vượt (đồng bộ BOT)</div>
-      <div class="text-white/70 text-sm">Quản lý danh sách link vượt trong bot (GET/SET qua API).</div>
-    </div>
-    <div class="flex gap-2 flex-wrap">
-      <button class="btn px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15" onclick="adminLoadShorteners()">⬇️ Load</button>
-      <button class="btn px-4 py-2 rounded-2xl bg-indigo-500/80 hover:bg-indigo-500" onclick="adminSaveShorteners()">⬆️ Save</button>
-    </div>
-  </div>
-
-  <div class="mt-4 grid md:grid-cols-2 gap-3">
-    <textarea id="shortenersJson" class="w-full min-h-[220px] px-4 py-3 rounded-2xl bg-white/10 border border-white/10 outline-none mono" placeholder='[{"name":"LINK4M","api":"https://...&url="}]'></textarea>
-    <div class="glass rounded-3xl p-4">
-      <div class="font-bold">Gợi ý</div>
-      <div class="text-white/70 text-sm mt-2">
-        - Sửa trực tiếp JSON rồi bấm <b>Save</b>.<br/>
-        - Mỗi item gồm <span class="mono">name</span> và <span class="mono">api</span>.<br/>
-        - Bot sẽ validate và lưu lại.
-      </div>
-    </div>
-  </div>
-  <div class="mt-3 text-white/60 text-sm" id="shortenersMsg">—</div>
-</div>
-
